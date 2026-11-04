@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b1410">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blinds">
+<title>Poker Timer</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <header class="top">
+    <div>
+      <div id="tName" class="tname">Home Game</div>
+      <div id="levelLabel" class="level-label">Level 1</div>
+    </div>
+    <button id="openSettings" class="icon-btn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <section class="clock-area">
+    <button id="clock" class="clock" aria-label="Time remaining, tap to edit">20:00</button>
+    <div class="progress"><div id="progressBar"></div></div>
+    <div id="blinds" class="blinds">25 / 50</div>
+    <div id="ante" class="ante">Ante 50</div>
+    <div id="next" class="next">Next: 50 / 100</div>
+  </section>
+
+  <section class="controls">
+    <button id="prevBtn" class="ctl" aria-label="Previous level">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+    </button>
+    <button id="minusBtn" class="ctl small">−1m</button>
+    <button id="playBtn" class="ctl play" aria-label="Start">
+      <svg id="playIcon" viewBox="0 0 24 24" width="38" height="38" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
+    </button>
+    <button id="plusBtn" class="ctl small">+1m</button>
+    <button id="nextBtn" class="ctl" aria-label="Next level">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+    </button>
+  </section>
+
+  <section class="stats">
+    <div class="tile">
+      <div class="tl">Players</div>
+      <div class="tv" id="sPlayers">0</div>
+      <div class="steppers"><button data-step="players" data-d="-1">−</button><button data-step="players" data-d="1">+</button></div>
+    </div>
+    <div class="tile">
+      <div class="tl">Entries</div>
+      <div class="tv" id="sEntries2">0</div>
+      <div class="steppers"><button data-step="entries" data-d="-1">−</button><button data-step="entries" data-d="1">+</button></div>
+    </div>
+    <div class="tile">
+      <div class="tl">Rebuys</div>
+      <div class="tv" id="sRebuys">0</div>
+      <div class="steppers"><button data-step="rebuys" data-d="-1">−</button><button data-step="rebuys" data-d="1">+</button></div>
+    </div>
+    <div class="tile">
+      <div class="tl">Add-ons</div>
+      <div class="tv" id="sAddons">0</div>
+      <div class="steppers"><button data-step="addons" data-d="-1">−</button><button data-step="addons" data-d="1">+</button></div>
+    </div>
+    <div class="tile"><div class="tl">Avg stack</div><div class="tv" id="sAvg">–</div><div class="ts" id="sAvgBB"></div></div>
+    <div class="tile"><div class="tl">Prize pool</div><div class="tv" id="sPool">0</div><div class="ts" id="sChips"></div></div>
+    <div class="tile"><div class="tl">Elapsed</div><div class="tv" id="sElapsed">0:00</div></div>
+    <div class="tile"><div class="tl">Next break</div><div class="tv" id="sBreak">–</div></div>
+  </section>
+</main>
+
+<!-- Settings sheet -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-head">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="structure">Structure</button>
+      <button class="tab" data-tab="tournament">Tournament</button>
+      <button class="tab" data-tab="options">Options</button>
+    </div>
+    <button id="closeSettings" class="done-btn">Done</button>
+  </div>
+
+  <div class="sheet-body">
+    <!-- STRUCTURE -->
+    <section class="pane" data-pane="structure">
+      <h3>Generate structure</h3>
+      <div class="presets">
+        <button data-preset="turbo">Turbo</button>
+        <button data-preset="standard">Standard</button>
+        <button data-preset="deep">Deep stack</button>
+      </div>
+      <div class="form-grid">
+        <label>Starting big blind<input type="number" inputmode="numeric" id="gStartBB" min="1"></label>
+        <label>Level length (min)<input type="number" inputmode="numeric" id="gMin" min="1"></label>
+        <label>Number of levels<input type="number" inputmode="numeric" id="gCount" min="1" max="60"></label>
+        <label>Increase by
+          <select id="gMode"><option value="pct">Percent</option><option value="fixed">Fixed amount</option></select>
+        </label>
+        <label id="gPctWrap">Increase %<input type="number" inputmode="numeric" id="gPct" min="1"></label>
+        <label id="gFixedWrap">Increase BB by<input type="number" inputmode="numeric" id="gFixed" min="1"></label>
+        <label>Ante
+          <select id="gAnte"><option value="none">None</option><option value="bb">Big blind ante</option><option value="classic">Classic (≈BB/8 each)</option></select>
+        </label>
+        <label>Antes start at level<input type="number" inputmode="numeric" id="gAnteFrom" min="1"></label>
+        <label>Break every N levels<input type="number" inputmode="numeric" id="gBreakEvery" min="0"></label>
+        <label>Break length (min)<input type="number" inputmode="numeric" id="gBreakMin" min="1"></label>
+      </div>
+      <button id="generate" class="primary wide">Generate levels</button>
+
+      <h3>Levels <span class="hint">edit any value directly</span></h3>
+      <div class="table-wrap">
+        <table id="levelTable">
+          <thead><tr><th>#</th><th>SB</th><th>BB</th><th>Ante</th><th>Min</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row-btns">
+        <button id="addLevel">+ Level</button>
+        <button id="addBreak">+ Break</button>
+      </div>
+    </section>
+
+    <!-- TOURNAMENT -->
+    <section class="pane" data-pane="tournament" hidden>
+      <div class="form-grid">
+        <label class="full">Tournament name<input type="text" id="tNameIn" maxlength="40"></label>
+        <label>Buy-in<input type="number" inputmode="decimal" id="tBuyIn" min="0" step="any"></label>
+        <label>Starting stack<input type="number" inputmode="numeric" id="tStack" min="0"></label>
+        <label>Entries<input type="number" inputmode="numeric" id="tEntries" min="0"></label>
+        <label>Players remaining<input type="number" inputmode="numeric" id="tPlayers" min="0"></label>
+        <label>Rebuys<input type="number" inputmode="numeric" id="tRebuys" min="0"></label>
+        <label>Chips per rebuy<input type="number" inputmode="numeric" id="tRebuyChips" min="0"></label>
+        <label>Add-ons<input type="number" inputmode="numeric" id="tAddons" min="0"></label>
+        <label>Add-on cost<input type="number" inputmode="decimal" id="tAddonCost" min="0" step="any"></label>
+        <label>Chips per add-on<input type="number" inputmode="numeric" id="tAddonChips" min="0"></label>
+        <label>Currency symbol<input type="text" id="tCurrency" maxlength="3"></label>
+      </div>
+      <p class="hint">Rebuys cost the same as the buy-in.</p>
+    </section>
+
+    <!-- OPTIONS -->
+    <section class="pane" data-pane="options" hidden>
+      <label class="switch"><input type="checkbox" id="oSound"><span>Alarm at level change</span></label>
+      <label class="switch"><input type="checkbox" id="oWarn"><span>Warning before level ends</span></label>
+      <label class="inline">Warning time (seconds)<input type="number" inputmode="numeric" id="oWarnSec" min="5"></label>
+      <label class="switch"><input type="checkbox" id="oCountdown"><span>Tick during last 5 seconds</span></label>
+      <label class="switch"><input type="checkbox" id="oVoice"><span>Announce new blinds (voice)</span></label>
+      <label class="switch"><input type="checkbox" id="oVibrate"><span>Vibrate (Android)</span></label>
+      <label class="switch"><input type="checkbox" id="oWake"><span>Keep screen awake while running</span></label>
+      <button id="testSound" class="wide">Test sound</button>
+      <hr>
+      <button id="resetClock" class="wide">Restart clock from level 1</button>
+      <button id="resetAll" class="wide danger">Reset everything to defaults</button>
+    </section>
+  </div>
+</div>
+
+<!-- Edit time dialog -->
+<div id="timeDlg" class="dlg-backdrop" hidden>
+  <div class="dlg">
+    <h3>Set time remaining</h3>
+    <div class="time-inputs">
+      <input type="number" inputmode="numeric" id="editMin" min="0" max="999" aria-label="Minutes">
+      <span>:</span>
+      <input type="number" inputmode="numeric" id="editSec" min="0" max="59" aria-label="Seconds">
+    </div>
+    <div class="quick">
+      <button data-adj="-60">−1m</button><button data-adj="-10">−10s</button>
+      <button data-adj="10">+10s</button><button data-adj="60">+1m</button>
+    </div>
+    <button id="resetLevelTime" class="wide">Reset to full level</button>
+    <div class="dlg-btns">
+      <button id="timeCancel">Cancel</button>
+      <button id="timeOk" class="primary">Set</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
