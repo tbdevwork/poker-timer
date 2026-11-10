@@ -3,169 +3,420 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#0b1410">
+<meta name="theme-color" content="#0d0b09">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Blinds">
-<title>Poker Timer</title>
+<meta name="apple-mobile-web-app-title" content="Hillhaven">
+<title>Hillhaven Poker Club</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="stylesheet" href="style.css">
+<style>
+:root {
+  --bg: #0d0b09;
+  --surface: #171411;
+  --surface-2: #221d19;
+  --hair: #2a2420;
+  --text: #f4eee4;
+  --dim: #8d857a;
+  --accent: #f0a24b;
+  --accent-ink: #1a1007;
+  --ember: #ff7a3d;
+  --open: #6fcf97;
+  --closed: #ff6b5a;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+  --serif: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --d: clamp(250px, min(90vw, calc(100dvh - 400px)), 470px);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); }
+body {
+  color: var(--text); font-family: var(--sans);
+  -webkit-user-select: none; user-select: none; overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
+input, select { font: inherit; }
+[hidden] { display: none !important; }
+
+#app {
+  min-height: 100dvh; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 16px) calc(var(--safe-l) + 18px);
+  max-width: 720px; margin: 0 auto;
+}
+
+/* ---------- header ---------- */
+.top { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.top h1 { margin: 0; flex: 1; text-align: center; font-family: var(--serif); font-weight: 400; font-size: 19px; letter-spacing: .01em; color: var(--text); }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--dim); flex: none; }
+.icon-btn:active { background: var(--surface); color: var(--text); }
+
+/* ---------- dial ---------- */
+.stage { display: grid; place-items: center; flex: 1 1 auto; }
+.dial { position: relative; width: var(--d); height: var(--d); }
+.dial-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.track { fill: none; stroke: var(--surface-2); stroke-width: 3; }
+.ring { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; transition: stroke .3s; }
+.glow { fill: var(--ember); }
+.spark { fill: #ffe2b8; }
+.dial.paused .ring { stroke: #6b5a43; }
+.dial.warn .ring { stroke: var(--ember); }
+.dial.ended .ring { stroke: transparent; }
+#fuse { transition: opacity .3s; }
+.dial.paused #fuse, .dial.ended #fuse { opacity: 0; }
+.ember-glow { animation: flicker 1.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes flicker { 0%, 100% { opacity: .9; transform: scale(1); } 40% { opacity: .6; transform: scale(.85); } 70% { opacity: 1; transform: scale(1.12); } }
+
+.face { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.lvl { font-size: calc(var(--d) * .045); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+.time {
+  margin: calc(var(--d) * .01) 0 calc(var(--d) * .02);
+  font-weight: 200; font-size: calc(var(--d) * .27); line-height: 1; letter-spacing: -.035em;
+  font-variant-numeric: tabular-nums; color: var(--text);
+}
+.time.long { font-size: calc(var(--d) * .19); }
+.dial.paused .time { color: #a39b8e; }
+.dial.warn .time { color: #ffc690; }
+.blinds { font-weight: 600; font-size: calc(var(--d) * .105); line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; color: var(--accent); }
+.next { margin-top: calc(var(--d) * .03); font-size: calc(var(--d) * .045); color: var(--dim); }
+
+/* ---------- controls ---------- */
+.controls { display: flex; justify-content: center; align-items: center; gap: 12px; }
+.ctl { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-weight: 600; font-size: 14px; color: var(--text); }
+.ctl.small { color: var(--dim); }
+.ctl:active { background: var(--surface-2); transform: scale(.95); }
+.ctl.play { width: 72px; height: 72px; background: var(--accent); color: var(--accent-ink); }
+.ctl.play:active { background: #d98f3d; }
+.ctl.play.running { background: var(--surface-2); color: var(--accent); }
+.controls.off { display: none; }
+
+/* ---------- status ---------- */
+.status { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pill { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--surface); border-radius: 16px; }
+.pill:active { background: var(--surface-2); }
+.pl { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-weight: 500; display: flex; align-items: center; gap: 7px; }
+.pv { font-size: 21px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.ps { font-size: 13px; color: var(--dim); min-height: 1.2em; font-variant-numeric: tabular-nums; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); display: none; }
+#rebuyPill .dot { display: inline-block; }
+#rebuyPill.open .dot { background: var(--open); }
+#rebuyPill.open .pv { color: var(--open); }
+#rebuyPill.closed .dot { background: var(--closed); }
+#rebuyPill.closed .pv { color: var(--closed); }
+#stopPill.soon .ps { color: var(--ember); }
+
+/* ---------- cigar ---------- */
+.night { width: 100%; max-width: 520px; }
+.cigar { width: 100%; height: auto; display: block; overflow: visible; }
+.night-cap { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.leaf { fill: #6a4326; }
+.band { fill: var(--accent); }
+.char { fill: #2a2420; opacity: 0; transition: opacity .4s; }
+.ash { fill: #d6cec1; opacity: 0; transition: opacity .4s; }
+.cigar.lit .char, .cigar.lit .ash { opacity: 1; }
+.cig-ember { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.cigar.lit.burning .cig-ember { opacity: 1; animation: flicker 1.9s ease-in-out infinite; }
+.cigar.lit:not(.burning) .cig-ember { opacity: .25; }
+.smoke { opacity: 0; }
+.wisp { fill: none; stroke: rgba(244, 238, 228, .3); stroke-width: 2; stroke-linecap: round; opacity: 0; }
+.cigar.burning .smoke { opacity: 1; }
+.cigar.burning .wisp { animation: smoke 4.6s ease-in-out infinite; }
+.cigar.burning .w2 { animation-delay: 1.5s; animation-duration: 5.2s; }
+.cigar.burning .w3 { animation-delay: 3s; animation-duration: 4.1s; }
+@keyframes smoke { 0% { opacity: 0; transform: translate(0, 6px); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(10px, -22px); } }
+
+/* ---------- end banner + toast ---------- */
+.end-banner { width: 100%; padding: 14px; border-radius: 18px; text-align: center; background: var(--surface); }
+.eb-title { font-family: var(--serif); font-size: 20px; margin-bottom: 12px; }
+.eb-btns { display: flex; gap: 10px; }
+.eb-btns button { flex: 1; padding: 13px; border-radius: 12px; background: var(--surface-2); font-weight: 600; }
+.eb-btns button.primary { background: var(--accent); color: var(--accent-ink); }
+.toast { position: fixed; left: 50%; top: calc(var(--safe-t) + 60px); transform: translateX(-50%); z-index: 30; padding: 10px 18px; border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 500; box-shadow: 0 6px 24px rgba(0, 0, 0, .5); max-width: 90vw; text-align: center; }
+
+/* ---------- landscape phones ---------- */
+@media (orientation: landscape) and (max-height: 560px) {
+  :root { --d: min(calc(100dvh - 70px), 44vw); }
+  #app { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto auto 1fr; column-gap: 28px; row-gap: 12px; align-content: start; max-width: 1000px; }
+  .top { grid-column: 1 / -1; }
+  .stage { grid-column: 1; grid-row: 2 / 5; align-self: center; }
+  .controls, .end-banner { grid-column: 2; grid-row: 2; margin: 0; }
+  .status { grid-column: 2; grid-row: 3; }
+  .night { grid-column: 2; grid-row: 4; align-self: start; }
+}
+@media (min-width: 700px) and (min-height: 700px) { :root { --d: clamp(300px, min(60vw, calc(100dvh - 380px)), 470px); } }
+
+/* ---------- sheets ---------- */
+.sheet { position: fixed; inset: 0; z-index: 10; background: var(--bg); display: flex; flex-direction: column; padding: calc(var(--safe-t) + 4px) var(--safe-r) 0 var(--safe-l); -webkit-user-select: text; user-select: text; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px 8px; max-width: 720px; width: 100%; margin: 0 auto; }
+.sheet-head h2 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -.02em; }
+.done-btn { color: var(--accent); font-weight: 600; font-size: 17px; padding: 8px 4px; }
+.sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 16px calc(var(--safe-b) + 40px); max-width: 720px; width: 100%; margin: 0 auto; }
+.gl { margin: 22px 0 8px 16px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+.sheet-body > .group:first-child { margin-top: 10px; }
+.group { background: var(--surface); border-radius: 16px; overflow: hidden; }
+.group > .row + .row, .group > .row + details, .group > details + .row { border-top: 1px solid var(--hair); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 13px 16px; font-size: 17px; width: 100%; text-align: left; min-height: 50px; }
+.row > span:first-child { flex: none; }
+.row.link { color: var(--accent); }
+.row.link.danger { color: var(--closed); }
+.hint { color: var(--dim); font-size: 13px; font-weight: 400; }
+.hint.pad { padding: 10px 16px 0; margin: 0; }
+.unit { display: inline-flex; align-items: center; gap: 8px; color: var(--dim); font-size: 15px; white-space: nowrap; }
+.unit input { width: 72px; }
+
+input[type=number], input[type=text], input[type=time] {
+  background: var(--surface-2); color: var(--text); border: 0; border-radius: 10px; padding: 9px 12px; font-size: 17px; min-width: 0; text-align: right; font-variant-numeric: tabular-nums;
+}
+.row input[type=text] { flex: 1; background: transparent; padding: 9px 0; }
+input[type=text].plain, .place input { text-align: left; }
+input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+input::placeholder { color: #5f584f; }
+
+/* iOS-style switch */
+input.sw { appearance: none; -webkit-appearance: none; width: 51px; height: 31px; border-radius: 999px; background: #3a342e; position: relative; flex: none; transition: background .2s; cursor: pointer; }
+input.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+input.sw:checked { background: var(--accent); }
+input.sw:checked::after { transform: translateX(20px); }
+input.sw:focus { outline-offset: 2px; }
+
+details.levels > summary { list-style: none; cursor: pointer; }
+details.levels > summary::-webkit-details-marker { display: none; }
+details.levels > summary::after { content: "›"; color: var(--dim); font-size: 22px; line-height: 1; transition: transform .2s; margin-left: 4px; }
+details.levels > summary { justify-content: flex-start; }
+details.levels > summary .hint { margin-left: auto; }
+details.levels[open] > summary::after { transform: rotate(90deg); }
+.table-wrap { border-top: 1px solid var(--hair); padding-bottom: 14px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { text-align: left; color: var(--dim); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; padding: 10px 6px 6px; }
+td { padding: 3px; }
+td:first-child, th:first-child { padding-left: 16px; width: 40px; color: var(--dim); }
+td input { width: 100%; text-align: left; padding: 8px 10px; font-size: 16px; }
+tr.current td:first-child { color: var(--accent); font-weight: 700; }
+tr.current input { box-shadow: inset 0 0 0 1px rgba(240, 162, 75, .5); }
+.del { color: var(--dim); font-size: 22px; padding: 2px 12px; }
+.row-btns { display: flex; gap: 8px; padding: 12px 16px 0; }
+.row-btns button { flex: 1; padding: 11px; border-radius: 12px; background: var(--surface-2); font-weight: 600; font-size: 15px; }
+
+button.wide { width: 100%; margin-top: 12px; padding: 14px; border-radius: 14px; background: var(--surface-2); font-weight: 600; font-size: 16px; }
+button.primary { background: var(--accent); color: var(--accent-ink); }
+
+.place .medal { font-size: 15px; font-weight: 600; color: var(--dim); width: 36px; letter-spacing: .02em; }
+.standings, .history { display: flex; flex-direction: column; }
+.srow { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-top: 1px solid var(--hair); }
+.srow:first-child { border-top: 0; }
+.srow .n { flex: 1; font-size: 17px; }
+.srow .c { color: var(--dim); font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.srow .c b { color: var(--text); font-weight: 600; }
+.hrow { padding: 12px 8px 12px 16px; border-top: 1px solid var(--hair); display: flex; gap: 10px; align-items: center; }
+.hrow:first-child { border-top: 0; }
+.hrow .d { color: var(--dim); font-size: 13px; width: 84px; flex: none; }
+.hrow .w { flex: 1; font-size: 15px; line-height: 1.5; }
+
+/* ---------- dialogs ---------- */
+.dlg-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, .6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; }
+.dlg { background: var(--surface); border-radius: 24px; padding: 20px; width: 100%; max-width: 360px; -webkit-user-select: text; user-select: text; }
+.dlg h3 { margin: 0 0 14px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 500; text-align: center; }
+.dlg-text { text-align: center; margin: 0 0 14px; font-size: 17px; line-height: 1.4; }
+.time-inputs { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 44px; font-weight: 200; }
+.time-inputs input { width: 112px; text-align: center; font-size: 44px; font-weight: 200; padding: 6px; }
+.time-inputs input.time-field { width: 220px; font-size: 34px; font-weight: 300; }
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+.quick.two { grid-template-columns: 1fr 1fr; margin-top: 0; }
+.quick button { background: var(--surface-2); border-radius: 12px; padding: 13px 0; font-weight: 600; }
+.dlg-btns { display: flex; gap: 10px; margin-top: 16px; }
+.dlg-btns button { flex: 1; padding: 14px; border-radius: 14px; background: var(--surface-2); font-weight: 600; }
+.dlg-btns button.primary { background: var(--accent); color: var(--accent-ink); }
+</style>
 </head>
 <body>
 <main id="app">
+
   <header class="top">
-    <div>
-      <div id="tName" class="tname">Home Game</div>
-      <div id="levelLabel" class="level-label">Level 1</div>
-    </div>
+    <button id="openResults" class="icon-btn" aria-label="Winners">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+    </button>
+    <h1 id="club">Hillhaven Poker Club</h1>
     <button id="openSettings" class="icon-btn" aria-label="Settings">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
     </button>
   </header>
 
-  <section class="clock-area">
-    <button id="clock" class="clock" aria-label="Time remaining, tap to edit">20:00</button>
-    <div class="progress"><div id="progressBar"></div></div>
-    <div id="blinds" class="blinds">25 / 50</div>
-    <div id="ante" class="ante">Ante 50</div>
-    <div id="next" class="next">Next: 50 / 100</div>
+  <section class="stage">
+    <div class="dial" id="dial">
+      <svg viewBox="0 0 400 400" class="dial-svg" aria-hidden="true">
+        <defs>
+          <filter id="fGlow" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="7"/></filter>
+        </defs>
+        <circle cx="200" cy="200" r="170" class="track"/>
+        <circle id="ring" cx="200" cy="200" r="170" class="ring" transform="rotate(-90 200 200)"/>
+        <g id="fuse">
+          <circle r="13" class="glow ember-glow" filter="url(#fGlow)"/>
+          <circle r="5" class="spark"/>
+        </g>
+      </svg>
+      <div class="face">
+        <div class="lvl" id="lvlLabel">Level 1</div>
+        <button class="time" id="clock" aria-label="Time remaining, tap to adjust">15:00</button>
+        <div class="blinds" id="blinds">5 / 5</div>
+        <div class="next" id="next">Next 5 / 10</div>
+      </div>
+    </div>
   </section>
 
   <section class="controls">
     <button id="prevBtn" class="ctl" aria-label="Previous level">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
     </button>
     <button id="minusBtn" class="ctl small">−1m</button>
     <button id="playBtn" class="ctl play" aria-label="Start">
-      <svg id="playIcon" viewBox="0 0 24 24" width="38" height="38" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
+      <svg id="playIcon" viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
     </button>
     <button id="plusBtn" class="ctl small">+1m</button>
     <button id="nextBtn" class="ctl" aria-label="Next level">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
     </button>
   </section>
 
-  <section class="stats">
-    <div class="tile">
-      <div class="tl">Players</div>
-      <div class="tv" id="sPlayers">0</div>
-      <div class="steppers"><button data-step="players" data-d="-1">−</button><button data-step="players" data-d="1">+</button></div>
+  <div id="endBanner" class="end-banner" hidden>
+    <div class="eb-title">Time — that's the last hand</div>
+    <div class="eb-btns">
+      <button id="ebWinners" class="primary">Record winners</button>
+      <button id="ebNew">New night</button>
     </div>
-    <div class="tile">
-      <div class="tl">Entries</div>
-      <div class="tv" id="sEntries2">0</div>
-      <div class="steppers"><button data-step="entries" data-d="-1">−</button><button data-step="entries" data-d="1">+</button></div>
-    </div>
-    <div class="tile">
-      <div class="tl">Rebuys</div>
-      <div class="tv" id="sRebuys">0</div>
-      <div class="steppers"><button data-step="rebuys" data-d="-1">−</button><button data-step="rebuys" data-d="1">+</button></div>
-    </div>
-    <div class="tile">
-      <div class="tl">Add-ons</div>
-      <div class="tv" id="sAddons">0</div>
-      <div class="steppers"><button data-step="addons" data-d="-1">−</button><button data-step="addons" data-d="1">+</button></div>
-    </div>
-    <div class="tile"><div class="tl">Avg stack</div><div class="tv" id="sAvg">–</div><div class="ts" id="sAvgBB"></div></div>
-    <div class="tile"><div class="tl">Prize pool</div><div class="tv" id="sPool">0</div><div class="ts" id="sChips"></div></div>
-    <div class="tile"><div class="tl">Elapsed</div><div class="tv" id="sElapsed">0:00</div></div>
-    <div class="tile"><div class="tl">Next break</div><div class="tv" id="sBreak">–</div></div>
+  </div>
+
+  <section class="status">
+    <button class="pill" id="rebuyPill">
+      <span class="pl"><i class="dot"></i>Rebuys</span>
+      <span class="pv" id="rebuyVal">Open</span>
+      <span class="ps" id="rebuySub"></span>
+    </button>
+    <button class="pill" id="stopPill">
+      <span class="pl">Hard stop</span>
+      <span class="pv" id="stopVal">11:00 PM</span>
+      <span class="ps" id="stopSub"></span>
+    </button>
+  </section>
+
+  <section class="night" aria-label="Tonight's cigar">
+    <svg viewBox="0 -50 640 120" id="cigar" class="cigar" aria-hidden="true">
+      <defs>
+        <radialGradient id="gCigEmber">
+          <stop offset="0" stop-color="#ffd9a0"/><stop offset=".35" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff5a14" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect id="cBody" x="40" y="28" width="560" height="22" rx="11" class="leaf"/>
+      <g id="cBand"><rect x="500" y="28" width="12" height="22" class="band"/></g>
+      <g id="cFire">
+        <rect id="cChar" x="34" y="28" width="10" height="22" rx="4" class="char"/>
+        <rect id="cAsh" x="6" y="29" width="32" height="20" rx="8" class="ash"/>
+        <circle id="cEmber" cx="40" cy="39" r="22" fill="url(#gCigEmber)" class="cig-ember"/>
+        <g id="cSmoke" class="smoke">
+          <path class="wisp w1" d="M0 0 C -9 -12, 9 -22, 0 -36 S -7 -52, 3 -66"/>
+          <path class="wisp w2" d="M6 0 C 16 -10, -2 -22, 8 -34 S 16 -48, 6 -62"/>
+          <path class="wisp w3" d="M-6 0 C -16 -9, 2 -20, -8 -32 S -14 -46, -4 -58"/>
+        </g>
+      </g>
+    </svg>
+    <div class="night-cap"><span id="capL">Press ▶ to light up</span><span id="capR"></span></div>
   </section>
 </main>
 
-<!-- Settings sheet -->
+<div id="toast" class="toast" hidden></div>
+
+<!-- Settings -->
 <div id="sheet" class="sheet" hidden>
   <div class="sheet-head">
-    <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="structure">Structure</button>
-      <button class="tab" data-tab="tournament">Tournament</button>
-      <button class="tab" data-tab="options">Options</button>
-    </div>
+    <h2>Settings</h2>
     <button id="closeSettings" class="done-btn">Done</button>
   </div>
-
   <div class="sheet-body">
-    <!-- STRUCTURE -->
-    <section class="pane" data-pane="structure">
-      <h3>Generate structure</h3>
-      <div class="presets">
-        <button data-preset="turbo">Turbo</button>
-        <button data-preset="standard">Standard</button>
-        <button data-preset="deep">Deep stack</button>
-      </div>
-      <div class="form-grid">
-        <label>Starting big blind<input type="number" inputmode="numeric" id="gStartBB" min="1"></label>
-        <label>Level length (min)<input type="number" inputmode="numeric" id="gMin" min="1"></label>
-        <label>Number of levels<input type="number" inputmode="numeric" id="gCount" min="1" max="60"></label>
-        <label>Increase by
-          <select id="gMode"><option value="pct">Percent</option><option value="fixed">Fixed amount</option></select>
-        </label>
-        <label id="gPctWrap">Increase %<input type="number" inputmode="numeric" id="gPct" min="1"></label>
-        <label id="gFixedWrap">Increase BB by<input type="number" inputmode="numeric" id="gFixed" min="1"></label>
-        <label>Ante
-          <select id="gAnte"><option value="none">None</option><option value="bb">Big blind ante</option><option value="classic">Classic (≈BB/8 each)</option></select>
-        </label>
-        <label>Antes start at level<input type="number" inputmode="numeric" id="gAnteFrom" min="1"></label>
-        <label>Break every N levels<input type="number" inputmode="numeric" id="gBreakEvery" min="0"></label>
-        <label>Break length (min)<input type="number" inputmode="numeric" id="gBreakMin" min="1"></label>
-      </div>
-      <button id="generate" class="primary wide">Generate levels</button>
 
-      <h3>Levels <span class="hint">edit any value directly</span></h3>
-      <div class="table-wrap">
-        <table id="levelTable">
-          <thead><tr><th>#</th><th>SB</th><th>BB</th><th>Ante</th><th>Min</th><th></th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="row-btns">
-        <button id="addLevel">+ Level</button>
-        <button id="addBreak">+ Break</button>
-      </div>
-    </section>
+    <div class="group">
+      <label class="row"><span>Club name</span><input type="text" id="sName" maxlength="40" autocomplete="off"></label>
+    </div>
 
-    <!-- TOURNAMENT -->
-    <section class="pane" data-pane="tournament" hidden>
-      <div class="form-grid">
-        <label class="full">Tournament name<input type="text" id="tNameIn" maxlength="40"></label>
-        <label>Buy-in<input type="number" inputmode="decimal" id="tBuyIn" min="0" step="any"></label>
-        <label>Starting stack<input type="number" inputmode="numeric" id="tStack" min="0"></label>
-        <label>Entries<input type="number" inputmode="numeric" id="tEntries" min="0"></label>
-        <label>Players remaining<input type="number" inputmode="numeric" id="tPlayers" min="0"></label>
-        <label>Rebuys<input type="number" inputmode="numeric" id="tRebuys" min="0"></label>
-        <label>Chips per rebuy<input type="number" inputmode="numeric" id="tRebuyChips" min="0"></label>
-        <label>Add-ons<input type="number" inputmode="numeric" id="tAddons" min="0"></label>
-        <label>Add-on cost<input type="number" inputmode="decimal" id="tAddonCost" min="0" step="any"></label>
-        <label>Chips per add-on<input type="number" inputmode="numeric" id="tAddonChips" min="0"></label>
-        <label>Currency symbol<input type="text" id="tCurrency" maxlength="3"></label>
-      </div>
-      <p class="hint">Rebuys cost the same as the buy-in.</p>
-    </section>
+    <div class="gl">Blinds</div>
+    <div class="group">
+      <label class="row"><span>Level length</span><span class="unit"><input type="number" inputmode="numeric" id="sLevelMin" min="1" max="120"> min</span></label>
+      <details class="levels">
+        <summary class="row"><span>Edit levels</span><span id="lvlCount" class="hint"></span></summary>
+        <div class="table-wrap">
+          <table id="levelTable">
+            <thead><tr><th>#</th><th>Small</th><th>Big</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p class="hint pad">Type 1k or 1000, both work. The last level repeats until the hard stop.</p>
+          <div class="row-btns">
+            <button id="addLevel">Add level</button>
+            <button id="resetLevels">Club defaults</button>
+          </div>
+        </div>
+      </details>
+    </div>
 
-    <!-- OPTIONS -->
-    <section class="pane" data-pane="options" hidden>
-      <label class="switch"><input type="checkbox" id="oSound"><span>Alarm at level change</span></label>
-      <label class="switch"><input type="checkbox" id="oWarn"><span>Warning before level ends</span></label>
-      <label class="inline">Warning time (seconds)<input type="number" inputmode="numeric" id="oWarnSec" min="5"></label>
-      <label class="switch"><input type="checkbox" id="oCountdown"><span>Tick during last 5 seconds</span></label>
-      <label class="switch"><input type="checkbox" id="oVoice"><span>Announce new blinds (voice)</span></label>
-      <label class="switch"><input type="checkbox" id="oVibrate"><span>Vibrate (Android)</span></label>
-      <label class="switch"><input type="checkbox" id="oWake"><span>Keep screen awake while running</span></label>
-      <button id="testSound" class="wide">Test sound</button>
-      <hr>
-      <button id="resetClock" class="wide">Restart clock from level 1</button>
-      <button id="resetAll" class="wide danger">Reset everything to defaults</button>
-    </section>
+    <div class="gl">Hard stop</div>
+    <div class="group">
+      <label class="row"><span>End the game at a set time</span><input type="checkbox" class="sw" id="sStopOn"></label>
+      <label class="row" id="stopTimeRow"><span>Stop at</span><input type="time" id="sStopTime"></label>
+    </div>
+
+    <div class="gl">Rebuys</div>
+    <div class="group">
+      <label class="row"><span>Open window, then locked</span><input type="checkbox" class="sw" id="sRebuyOn"></label>
+      <label class="row" id="rebuyMinRow"><span>Close after</span><span class="unit"><input type="number" inputmode="numeric" id="sRebuyMin" min="1" max="600"> min of play</span></label>
+    </div>
+
+    <div class="gl">Alerts</div>
+    <div class="group">
+      <label class="row"><span>Bell at level changes</span><input type="checkbox" class="sw" id="oSound"></label>
+      <label class="row"><span>Heads-up one minute before</span><input type="checkbox" class="sw" id="oWarn"></label>
+      <label class="row"><span>Announce blinds out loud</span><input type="checkbox" class="sw" id="oVoice"></label>
+      <label class="row"><span>Keep screen awake</span><input type="checkbox" class="sw" id="oWake"></label>
+      <button id="testSound" class="row link">Test the bell</button>
+    </div>
+
+    <div class="gl">Night</div>
+    <div class="group">
+      <button id="newNight" class="row link">Start a new night</button>
+      <button id="resetAll" class="row link danger">Reset all settings</button>
+    </div>
   </div>
 </div>
 
-<!-- Edit time dialog -->
+<!-- Winners -->
+<div id="results" class="sheet" hidden>
+  <div class="sheet-head">
+    <h2>Winners</h2>
+    <button id="closeResults" class="done-btn">Done</button>
+  </div>
+  <div class="sheet-body">
+    <div class="gl" id="tonightLabel">Tonight</div>
+    <div class="group">
+      <label class="row place"><span class="medal">1st</span><input type="text" id="rFirst" list="names" placeholder="Name" autocomplete="off" autocapitalize="words"></label>
+      <label class="row place"><span class="medal">2nd</span><input type="text" id="rSecond" list="names" placeholder="Name" autocomplete="off" autocapitalize="words"></label>
+      <label class="row place"><span class="medal">3rd</span><input type="text" id="rThird" list="names" placeholder="Name" autocomplete="off" autocapitalize="words"></label>
+      <datalist id="names"></datalist>
+    </div>
+    <button id="saveResult" class="primary wide">Save tonight's result</button>
+
+    <div class="gl" id="standingsLabel" hidden>Standings</div>
+    <div class="group" id="standingsCard" hidden><div id="standings" class="standings"></div></div>
+
+    <div class="gl" id="historyLabel" hidden>Past nights</div>
+    <div class="group" id="historyCard" hidden><div id="history" class="history"></div></div>
+  </div>
+</div>
+
+<!-- Set time -->
 <div id="timeDlg" class="dlg-backdrop" hidden>
   <div class="dlg">
-    <h3>Set time remaining</h3>
+    <h3>Time left in this level</h3>
     <div class="time-inputs">
       <input type="number" inputmode="numeric" id="editMin" min="0" max="999" aria-label="Minutes">
       <span>:</span>
@@ -176,13 +427,638 @@
       <button data-adj="10">+10s</button><button data-adj="60">+1m</button>
     </div>
     <button id="resetLevelTime" class="wide">Reset to full level</button>
-    <div class="dlg-btns">
-      <button id="timeCancel">Cancel</button>
-      <button id="timeOk" class="primary">Set</button>
-    </div>
+    <div class="dlg-btns"><button id="timeCancel">Cancel</button><button id="timeOk" class="primary">Set</button></div>
   </div>
 </div>
 
-<script src="app.js"></script>
+<!-- Rebuy window -->
+<div id="rebuyDlg" class="dlg-backdrop" hidden>
+  <div class="dlg">
+    <h3>Rebuy window</h3>
+    <p id="rebuyDlgText" class="dlg-text"></p>
+    <div class="quick two">
+      <button data-rb="-15">−15 min</button><button data-rb="15">+15 min</button>
+    </div>
+    <button id="rbCloseNow" class="wide">Close rebuys now</button>
+    <button id="rbReset" class="wide">Back to default</button>
+    <div class="dlg-btns"><button id="rbDone" class="primary">Done</button></div>
+  </div>
+</div>
+
+<!-- Hard stop -->
+<div id="stopDlg" class="dlg-backdrop" hidden>
+  <div class="dlg">
+    <h3>Hard stop</h3>
+    <div class="time-inputs"><input type="time" id="stopTimeIn" class="time-field"></div>
+    <div class="dlg-btns"><button id="stopCancel">Cancel</button><button id="stopOk" class="primary">Set</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   Hillhaven Poker Club timer
+   ===================================================================== */
+
+const STORE_KEY = 'hillhaven.v1';
+const CLUB_NAME = 'Hillhaven Poker Club';
+const DEFAULT_LEVELS = [
+  [5, 5], [5, 10], [10, 20], [15, 30], [25, 50], [50, 100], [75, 150], [100, 200],
+  [150, 300], [200, 400], [300, 600], [400, 800], [500, 1000], [1000, 2000], [2000, 4000], [4000, 8000],
+].map(([sb, bb]) => ({ sb, bb }));
+
+function freshRun(levelMin) {
+  return {
+    idx: 0, running: false, remaining: levelMin * 60000, endAt: null,
+    elapsedBase: 0, runStart: null,   // play time (pauses excluded) — drives the rebuy window
+    startedAt: null, stopAt: null,    // wall-clock: when the cigar was lit / when it goes out
+    cutoff: null,                     // rebuy cutoff in play-time ms (null = use the default)
+    ended: false,
+    flags: { warnIdx: -1, rebuy: false, stop: false },
+  };
+}
+function defaults() {
+  return {
+    club: CLUB_NAME,
+    levelMin: 15,
+    levels: DEFAULT_LEVELS.map((l) => ({ ...l })),
+    stop: { on: true, time: '23:00' },
+    rebuy: { on: true, min: 120 },
+    opts: { sound: true, warn: true, voice: false, wake: true },
+    history: [],
+    run: freshRun(15),
+  };
+}
+
+let S = load();
+
+function load() {
+  const d = defaults();
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return d;
+    const s = JSON.parse(raw);
+    const out = {
+      club: typeof s.club === 'string' && s.club.trim() ? s.club : d.club,
+      levelMin: Math.max(1, Number(s.levelMin) || d.levelMin),
+      levels: Array.isArray(s.levels) && s.levels.length ? s.levels.map((l) => ({ sb: +l.sb || 0, bb: +l.bb || 0 })) : d.levels,
+      stop: { ...d.stop, ...s.stop },
+      rebuy: { ...d.rebuy, ...s.rebuy },
+      opts: { ...d.opts, ...s.opts },
+      history: Array.isArray(s.history) ? s.history : [],
+      run: { ...freshRun(Math.max(1, Number(s.levelMin) || 15)), ...s.run },
+    };
+    out.run.flags = { ...d.run.flags, ...(s.run && s.run.flags) };
+    if (out.run.idx > out.levels.length - 1) out.run.idx = out.levels.length - 1;
+    return out;
+  } catch (e) { return d; }
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable */ } }
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function levelMs() { return Math.max(1, Number(S.levelMin) || 15) * 60000; }
+function cur() { return S.levels[S.run.idx]; }
+
+/* ---------- formatting ---------- */
+function fmtB(n) {
+  if (n >= 1000) { const k = n / 1000; return (Number.isInteger(k) ? k : +k.toFixed(2)) + 'k'; }
+  return String(n);
+}
+function parseB(str) {
+  const m = String(str).trim().toLowerCase().replace(/,/g, '').match(/^(\d+(?:\.\d+)?)\s*k?$/);
+  if (!m) return NaN;
+  return Math.round(parseFloat(m[1]) * (/k\s*$/.test(String(str).trim().toLowerCase()) ? 1000 : 1));
+}
+const blindsText = (lv) => `${fmtB(lv.sb)} / ${fmtB(lv.bb)}`;
+function fmtClock(ms) {
+  const t = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
+}
+function fmtLeft(ms) {   // "2h 14m" or "9:30"
+  const t = Math.max(0, Math.ceil(ms / 1000));
+  if (t >= 3600) return `${Math.floor(t / 3600)}h ${String(Math.floor((t % 3600) / 60)).padStart(2, '0')}m`;
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+}
+function fmtMin(min) {   // 120 -> "2h", 90 -> "1h 30m"
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+const fmtTimeOfDay = (ms) => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+function fmtHHMM(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date(); d.setHours(h, m, 0, 0);
+  return fmtTimeOfDay(d);
+}
+
+/* ---------- time model ---------- */
+function remainingMs(now = Date.now()) { return S.run.running ? S.run.endAt - now : S.run.remaining; }
+function elapsedMs(now = Date.now()) { return S.run.elapsedBase + (S.run.running ? now - S.run.runStart : 0); }
+function rebuyCutoff() { return S.run.cutoff != null ? S.run.cutoff : S.rebuy.min * 60000; }
+function resolveStop(from) {
+  const [h, m] = S.stop.time.split(':').map(Number);
+  const d = new Date(from); d.setHours(h, m, 0, 0);
+  if (+d <= from) d.setDate(d.getDate() + 1);
+  return +d;
+}
+
+function start() {
+  const r = S.run;
+  if (r.running || r.ended) return;
+  unlockAudio();
+  const now = Date.now();
+  if (!r.startedAt) {
+    r.startedAt = now;
+    r.stopAt = S.stop.on ? resolveStop(now) : null;
+  }
+  if (r.remaining <= 0) r.remaining = levelMs();
+  r.running = true; r.endAt = now + r.remaining; r.runStart = now;
+  save(); requestWake(); render();
+}
+function pause() {
+  const r = S.run;
+  if (!r.running) return;
+  const now = Date.now();
+  r.remaining = Math.max(0, r.endAt - now);
+  r.elapsedBase += now - r.runStart;
+  r.running = false; r.endAt = null; r.runStart = null;
+  save(); releaseWake(); render();
+}
+function toggle() { S.run.running ? pause() : start(); }
+
+function setRemaining(ms) {
+  if (S.run.ended) return;
+  ms = Math.max(0, Math.round(ms));
+  if (S.run.running) S.run.endAt = Date.now() + ms; else S.run.remaining = ms;
+  if (ms > 60000) S.run.flags.warnIdx = -1;
+  save(); render();
+}
+function adjust(delta) { setRemaining(remainingMs() + delta); }
+
+function goTo(idx, announceIt = true) {
+  if (S.run.ended) return;
+  idx = clamp(idx, 0, S.levels.length - 1);
+  S.run.idx = idx;
+  if (S.run.running) S.run.endAt = Date.now() + levelMs(); else S.run.remaining = levelMs();
+  S.run.flags.warnIdx = -1;
+  save(); render();
+  if (announceIt) announceLevel(false);
+}
+
+function endGame() {
+  const r = S.run;
+  if (r.ended) return;
+  if (r.running) { r.elapsedBase += Math.max(0, (r.stopAt || Date.now()) - r.runStart); }
+  r.running = false; r.endAt = null; r.runStart = null; r.ended = true;
+  save(); releaseWake();
+  bell(3);
+  speak("Time. That's the hard stop.");
+  vibrate([500, 200, 500, 200, 500]);
+}
+
+function tick() {
+  const now = Date.now(), r = S.run;
+  if (!r.ended) {
+    if (r.running) {
+      const t = r.stopAt && now >= r.stopAt ? r.stopAt : now;   // catch up only to the hard stop
+      let changed = false;
+      while (r.endAt - t <= 0) {
+        if (r.idx < S.levels.length - 1) r.idx++;
+        r.endAt += levelMs();
+        r.flags.warnIdx = -1;
+        changed = true;
+      }
+      if (r.stopAt && now >= r.stopAt) { endGame(); render(); return; }
+      if (changed) { save(); announceLevel(true); }
+      else if (S.opts.warn && r.flags.warnIdx !== r.idx && r.endAt - now <= 60000 && levelMs() > 60000) {
+        r.flags.warnIdx = r.idx; save();
+        softTick(); vibrate([150, 80, 150]);
+        speak('One minute remaining.');
+      }
+      if (S.rebuy.on && !r.flags.rebuy && elapsedMs(now) >= rebuyCutoff()) {
+        r.flags.rebuy = true; save();
+        bell(1); speak('Rebuys are now closed.'); toast('Rebuys are now closed');
+      }
+      if (r.stopAt && !r.flags.stop && r.stopAt - now <= 15 * 60000) {
+        r.flags.stop = true; save();
+        softTick(); speak('Fifteen minutes to the hard stop.'); toast('15 minutes to the hard stop');
+      }
+    } else if (r.stopAt && now >= r.stopAt) {
+      endGame();
+    }
+  }
+  render();
+}
+
+/* ---------- sound ---------- */
+let actx = null;
+function unlockAudio() {
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) { /* no audio */ }
+}
+function strike(freq, when, vol = 0.5) {
+  if (!actx) return;
+  const t = actx.currentTime + when;
+  [[1, 1], [2.76, 0.45], [5.4, 0.2]].forEach(([mult, amp]) => {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'sine'; o.frequency.value = freq * mult;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * amp, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6 / mult ** 0.35);
+    o.connect(g).connect(actx.destination);
+    o.start(t); o.stop(t + 1.8);
+  });
+}
+function bell(times = 1) {
+  if (!S.opts.sound) return;
+  for (let i = 0; i < times; i++) strike(740, i * 0.9);
+}
+function softTick() {
+  if (!S.opts.sound || !actx) return;
+  strike(1180, 0, 0.22); strike(1180, 0.28, 0.22);
+}
+function vibrate(p) { if (navigator.vibrate) { try { navigator.vibrate(p); } catch (e) { /* ignore */ } } }
+function speak(text) {
+  if (!S.opts.voice || !('speechSynthesis' in window)) return;
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 0.95; speechSynthesis.speak(u); } catch (e) { /* ignore */ }
+}
+function announceLevel(withBell) {
+  if (withBell) { bell(1); vibrate([300, 120, 300]); }
+  const lv = cur();
+  setTimeout(() => speak(`Level ${S.run.idx + 1}. Blinds ${lv.sb} and ${lv.bb}.`), withBell && S.opts.sound ? 1500 : 0);
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, 6000);
+}
+
+/* ---------- wake lock ---------- */
+let wakeLock = null;
+async function requestWake() {
+  if (!S.opts.wake || !S.run.running || !('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+  try {
+    if (!wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch (e) { wakeLock = null; }
+}
+function releaseWake() { try { wakeLock && wakeLock.release(); } catch (e) { /* ignore */ } wakeLock = null; }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { tick(); requestWake(); } });
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+const RING_R = 170, RING_C = 2 * Math.PI * RING_R;
+const CIG = { x0: 40, x1: 600, ashLen: 30 };
+
+function burnFraction(now) {
+  const r = S.run;
+  if (!r.startedAt) return 0;
+  if (r.ended) return 1;
+  if (r.stopAt) return clamp((now - r.startedAt) / (r.stopAt - r.startedAt), 0, 1);
+  return clamp(elapsedMs(now) / (S.levels.length * levelMs()), 0, 1);
+}
+
+function render() {
+  const now = Date.now(), r = S.run, lv = cur();
+  const rem = remainingMs(now);
+  document.title = S.club;
+  $('club').textContent = S.club;
+
+  // dial
+  const dial = $('dial');
+  dial.classList.toggle('paused', !r.running && !r.ended);
+  dial.classList.toggle('ended', r.ended);
+  dial.classList.toggle('warn', r.running && rem <= 60000);
+  const frac = clamp(rem / levelMs(), 0, 1);
+  const len = Math.max(0.001, frac * RING_C);
+  $('ring').setAttribute('stroke-dasharray', `${len} ${RING_C}`);
+  const ang = frac * 2 * Math.PI;
+  $('fuse').setAttribute('transform', `translate(${200 + RING_R * Math.sin(ang)} ${200 - RING_R * Math.cos(ang)})`);
+
+  const clockText = fmtClock(rem);
+  $('clock').textContent = r.ended ? '0:00' : clockText;
+  $('clock').classList.toggle('long', clockText.length > 5);
+  if (r.ended) {
+    $('lvlLabel').textContent = 'Game over';
+    $('blinds').textContent = 'TIME';
+    $('next').textContent = S.stop.on ? `Hard stop · ${fmtHHMM(S.stop.time)}` : '';
+  } else {
+    $('lvlLabel').textContent = `Level ${r.idx + 1}${!r.running ? (r.startedAt ? ' · Paused' : '') : ''}`;
+    $('blinds').textContent = blindsText(lv);
+    const nx = S.levels[r.idx + 1];
+    $('next').textContent = nx ? `Next ${blindsText(nx)}` : 'Final level';
+  }
+
+  // controls
+  const play = $('playBtn');
+  play.classList.toggle('running', r.running);
+  play.setAttribute('aria-label', r.running ? 'Pause' : 'Start');
+  $('playIcon').innerHTML = r.running ? '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>' : '<path d="M7 4v16l13-8z"/>';
+  document.querySelector('.controls').classList.toggle('off', r.ended);
+  $('endBanner').hidden = !(r.ended && $('sheet').hidden && $('results').hidden);
+
+  // rebuy pill
+  const rp = $('rebuyPill');
+  rp.hidden = !S.rebuy.on;
+  if (S.rebuy.on) {
+    const cut = rebuyCutoff(), el = elapsedMs(now);
+    const open = el < cut;
+    rp.classList.toggle('open', open); rp.classList.toggle('closed', !open);
+    $('rebuyVal').textContent = open ? 'Open' : 'Closed';
+    $('rebuySub').textContent = open
+      ? (r.startedAt ? `${fmtLeft(cut - el)} left` : `first ${fmtMin(Math.round(cut / 60000))} of play`)
+      : 'no more rebuys';
+  }
+  $('stopPill').classList.toggle('soon', !!(r.stopAt && !r.ended && r.stopAt - now <= 15 * 60000));
+  $('rebuyPill').parentElement.style.gridTemplateColumns = S.rebuy.on ? '' : '1fr';
+
+  // hard stop pill
+  if (!S.stop.on) {
+    $('stopVal').textContent = 'None'; $('stopSub').textContent = 'tap to set';
+  } else {
+    $('stopVal').textContent = r.stopAt ? fmtTimeOfDay(r.stopAt) : fmtHHMM(S.stop.time);
+    $('stopSub').textContent = r.ended ? 'game over' : r.stopAt ? `${fmtLeft(r.stopAt - now)} left` : 'when the clock starts';
+  }
+
+  // cigar
+  const f = burnFraction(now), tip = CIG.x0 + (CIG.x1 - CIG.x0) * f;
+  const cig = $('cigar'), lit = !!r.startedAt;
+  cig.classList.toggle('lit', lit);
+  cig.classList.toggle('burning', r.running);
+  $('cBody').setAttribute('x', tip); $('cBody').setAttribute('width', CIG.x1 - tip);
+  $('cFire').setAttribute('transform', `translate(${tip - CIG.x0} 0)`);
+  $('cSmoke').setAttribute('transform', `translate(${CIG.x0 - 18} 28)`);
+  $('cBand').style.display = tip < 490 ? '' : 'none';
+  if (r.ended) cig.classList.remove('burning');
+  $('capL').textContent = lit ? `Lit ${fmtTimeOfDay(r.startedAt)}` : 'Press ▶ to light up';
+  $('capR').textContent = S.stop.on ? `Out ${r.stopAt ? fmtTimeOfDay(r.stopAt) : fmtHHMM(S.stop.time)}` : '';
+
+  if (!$('sheet').hidden) highlightRow();
+}
+
+/* =====================================================================
+   Main screen events
+   ===================================================================== */
+$('playBtn').addEventListener('click', toggle);
+$('prevBtn').addEventListener('click', () => {
+  const into = levelMs() - remainingMs();
+  if (into > 10000 || S.run.idx === 0) goTo(S.run.idx, false); else goTo(S.run.idx - 1);
+});
+$('nextBtn').addEventListener('click', () => { if (S.run.idx < S.levels.length - 1) goTo(S.run.idx + 1); });
+$('minusBtn').addEventListener('click', () => adjust(-60000));
+$('plusBtn').addEventListener('click', () => adjust(60000));
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (!$('sheet').hidden || !$('results').hidden) return;
+  if (e.code === 'Space') { e.preventDefault(); toggle(); }
+  else if (e.key === 'ArrowRight') $('nextBtn').click();
+  else if (e.key === 'ArrowLeft') $('prevBtn').click();
+});
+
+/* ---------- dialogs ---------- */
+function openDlg(id) { $(id).hidden = false; }
+function closeDlg(id) { $(id).hidden = true; }
+['timeDlg', 'rebuyDlg', 'stopDlg'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target === $(id)) closeDlg(id); }));
+
+// set time
+$('clock').addEventListener('click', () => {
+  if (S.run.ended) return;
+  const t = Math.max(0, Math.ceil(remainingMs() / 1000));
+  $('editMin').value = Math.floor(t / 60); $('editSec').value = t % 60;
+  openDlg('timeDlg');
+});
+const dlgSeconds = () => Math.max(0, (parseInt($('editMin').value, 10) || 0) * 60 + (parseInt($('editSec').value, 10) || 0));
+function setDlgSeconds(s) { s = Math.max(0, s); $('editMin').value = Math.floor(s / 60); $('editSec').value = s % 60; }
+document.querySelectorAll('[data-adj]').forEach((b) => b.addEventListener('click', () => setDlgSeconds(dlgSeconds() + Number(b.dataset.adj))));
+$('resetLevelTime').addEventListener('click', () => setDlgSeconds(levelMs() / 1000));
+$('timeCancel').addEventListener('click', () => closeDlg('timeDlg'));
+$('timeOk').addEventListener('click', () => { setRemaining(dlgSeconds() * 1000); closeDlg('timeDlg'); });
+
+// rebuy window
+function rebuyDlgText() {
+  const cut = rebuyCutoff(), el = elapsedMs();
+  $('rebuyDlgText').textContent = el < cut
+    ? (S.run.startedAt ? `Rebuys are open for another ${fmtLeft(cut - el)} of play.` : `Rebuys will close ${fmtMin(Math.round(cut / 60000))} after the clock starts.`)
+    : 'Rebuys are closed.';
+}
+function setCutoff(ms) {
+  S.run.cutoff = Math.max(0, ms);
+  S.run.flags.rebuy = elapsedMs() >= S.run.cutoff;   // no announcement for a change you made yourself
+  save(); rebuyDlgText(); render();
+}
+$('rebuyPill').addEventListener('click', () => { rebuyDlgText(); openDlg('rebuyDlg'); });
+document.querySelectorAll('[data-rb]').forEach((b) => b.addEventListener('click', () => {
+  const d = Number(b.dataset.rb) * 60000, el = elapsedMs(), cut = rebuyCutoff();
+  setCutoff(d > 0 ? Math.max(cut, el) + d : cut + d);
+}));
+$('rbCloseNow').addEventListener('click', () => setCutoff(elapsedMs()));
+$('rbReset').addEventListener('click', () => { S.run.cutoff = null; S.run.flags.rebuy = elapsedMs() >= rebuyCutoff(); save(); rebuyDlgText(); render(); });
+$('rbDone').addEventListener('click', () => closeDlg('rebuyDlg'));
+
+// hard stop
+$('stopPill').addEventListener('click', () => { $('stopTimeIn').value = S.stop.time; openDlg('stopDlg'); });
+$('stopCancel').addEventListener('click', () => closeDlg('stopDlg'));
+$('stopOk').addEventListener('click', () => {
+  if (/^\d{1,2}:\d{2}$/.test($('stopTimeIn').value)) applyStop(true, $('stopTimeIn').value);
+  closeDlg('stopDlg');
+});
+function applyStop(on, time) {
+  S.stop.on = on; S.stop.time = time || S.stop.time;
+  if (S.run.startedAt && !S.run.ended) { S.run.stopAt = on ? resolveStop(Date.now()) : null; S.run.flags.stop = false; }
+  save(); render();
+}
+
+/* =====================================================================
+   Settings
+   ===================================================================== */
+function openSettings() { syncSettings(); renderTable(); $('sheet').hidden = false; render(); }
+function closeSettings() { $('sheet').hidden = true; render(); }
+$('openSettings').addEventListener('click', openSettings);
+$('closeSettings').addEventListener('click', closeSettings);
+
+function syncSettings() {
+  $('sName').value = S.club;
+  $('sLevelMin').value = S.levelMin;
+  $('sStopOn').checked = S.stop.on; $('sStopTime').value = S.stop.time;
+  $('stopTimeRow').style.display = S.stop.on ? '' : 'none';
+  $('sRebuyOn').checked = S.rebuy.on; $('sRebuyMin').value = S.rebuy.min;
+  $('rebuyMinRow').style.display = S.rebuy.on ? '' : 'none';
+  $('oSound').checked = S.opts.sound; $('oWarn').checked = S.opts.warn; $('oVoice').checked = S.opts.voice; $('oWake').checked = S.opts.wake;
+}
+$('sName').addEventListener('input', () => { S.club = $('sName').value.trim() ? $('sName').value : CLUB_NAME; save(); render(); });
+$('sName').addEventListener('change', () => { if (!$('sName').value.trim()) $('sName').value = CLUB_NAME; });
+$('sLevelMin').addEventListener('change', () => {
+  const was = levelMs();
+  S.levelMin = clamp(parseInt($('sLevelMin').value, 10) || 15, 1, 120);
+  $('sLevelMin').value = S.levelMin;
+  if (!S.run.startedAt) S.run.remaining = levelMs();
+  else if (S.run.remaining === was) S.run.remaining = levelMs();
+  save(); render();
+});
+$('sStopOn').addEventListener('change', () => { applyStop($('sStopOn').checked); syncSettings(); });
+$('sStopTime').addEventListener('change', () => { if ($('sStopTime').value) applyStop(S.stop.on, $('sStopTime').value); });
+$('sRebuyOn').addEventListener('change', () => { S.rebuy.on = $('sRebuyOn').checked; save(); syncSettings(); render(); });
+$('sRebuyMin').addEventListener('change', () => {
+  S.rebuy.min = clamp(parseInt($('sRebuyMin').value, 10) || 120, 1, 600);
+  $('sRebuyMin').value = S.rebuy.min;
+  S.run.flags.rebuy = elapsedMs() >= rebuyCutoff();
+  save(); render();
+});
+[['oSound', 'sound'], ['oWarn', 'warn'], ['oVoice', 'voice'], ['oWake', 'wake']].forEach(([id, k]) => $(id).addEventListener('change', () => {
+  S.opts[k] = $(id).checked; save();
+  if (k === 'wake') (S.opts.wake ? requestWake() : releaseWake());
+  if (k === 'voice' && S.opts.voice) { unlockAudio(); speak('Voice announcements on.'); }
+}));
+$('testSound').addEventListener('click', () => { unlockAudio(); bell(1); setTimeout(() => speak(`Blinds ${cur().sb} and ${cur().bb}.`), 1200); });
+
+// level table
+function renderTable() {
+  const tb = document.querySelector('#levelTable tbody');
+  tb.innerHTML = '';
+  S.levels.forEach((lv, i) => {
+    const tr = document.createElement('tr'); tr.dataset.i = i;
+    tr.innerHTML = `<td>${i + 1}</td>
+      <td><input type="text" inputmode="text" data-k="sb" value="${fmtB(lv.sb)}" autocomplete="off"></td>
+      <td><input type="text" inputmode="text" data-k="bb" value="${fmtB(lv.bb)}" autocomplete="off"></td>
+      <td><button class="del" aria-label="Delete level">×</button></td>`;
+    tb.appendChild(tr);
+  });
+  $('lvlCount').textContent = `${S.levels.length} levels`;
+  highlightRow();
+}
+function highlightRow() {
+  document.querySelectorAll('#levelTable tbody tr').forEach((tr) => tr.classList.toggle('current', Number(tr.dataset.i) === S.run.idx));
+}
+document.querySelector('#levelTable tbody').addEventListener('change', (e) => {
+  const inp = e.target.closest('input'); if (!inp) return;
+  const i = Number(inp.closest('tr').dataset.i), k = inp.dataset.k, v = parseB(inp.value);
+  if (Number.isFinite(v) && v > 0) S.levels[i][k] = v;
+  inp.value = fmtB(S.levels[i][k]);
+  save(); render();
+});
+document.querySelector('#levelTable tbody').addEventListener('click', (e) => {
+  const del = e.target.closest('.del'); if (!del || S.levels.length <= 1) return;
+  const i = Number(del.closest('tr').dataset.i);
+  S.levels.splice(i, 1);
+  if (i < S.run.idx) S.run.idx--; else if (S.run.idx > S.levels.length - 1) S.run.idx = S.levels.length - 1;
+  save(); renderTable(); render();
+});
+$('addLevel').addEventListener('click', () => {
+  const last = S.levels[S.levels.length - 1];
+  S.levels.push({ sb: last.bb, bb: last.bb * 2 });
+  save(); renderTable(); render();
+});
+$('resetLevels').addEventListener('click', () => {
+  if (!confirm('Put the blind levels back to the club defaults?')) return;
+  S.levels = DEFAULT_LEVELS.map((l) => ({ ...l }));
+  if (S.run.idx > S.levels.length - 1) S.run.idx = S.levels.length - 1;
+  save(); renderTable(); render();
+});
+
+// night / reset
+function newNight() {
+  releaseWake();
+  S.run = freshRun(S.levelMin);
+  save(); render();
+}
+$('newNight').addEventListener('click', () => {
+  if (!confirm('Start a new night? The clock, rebuy window and hard stop all reset.')) return;
+  newNight(); closeSettings();
+});
+$('resetAll').addEventListener('click', () => {
+  if (!confirm('Reset every setting to the club defaults? Saved winners are kept.')) return;
+  const hist = S.history;
+  releaseWake();
+  S = defaults(); S.history = hist; save();
+  syncSettings(); renderTable(); render();
+});
+
+/* =====================================================================
+   Winners
+   ===================================================================== */
+function openResults() { renderResults(); $('results').hidden = false; render(); }
+function closeResults() { $('results').hidden = true; render(); }
+$('openResults').addEventListener('click', openResults);
+$('closeResults').addEventListener('click', closeResults);
+$('ebWinners').addEventListener('click', openResults);
+$('ebNew').addEventListener('click', () => {
+  if (!confirm('Start a new night? Make sure the winners are recorded first.')) return;
+  newNight();
+});
+
+function nameKey(n) { return n.trim().toLowerCase(); }
+function renderResults() {
+  $('tonightLabel').textContent = 'Tonight, ' + new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  // known names for quick entry
+  const names = new Map();
+  S.history.forEach((h) => [h.first, h.second, h.third].forEach((n) => { if (n && !names.has(nameKey(n))) names.set(nameKey(n), n); }));
+  const dl = $('names'); dl.innerHTML = '';
+  names.forEach((n) => { const o = document.createElement('option'); o.value = n; dl.appendChild(o); });
+
+  // standings
+  const tally = new Map();
+  S.history.forEach((h) => [['first', 'w'], ['second', 's'], ['third', 't']].forEach(([f, k]) => {
+    const n = h[f]; if (!n) return;
+    const key = nameKey(n);
+    if (!tally.has(key)) tally.set(key, { name: n, w: 0, s: 0, t: 0 });
+    tally.get(key)[k]++;
+  }));
+  const rows = [...tally.values()].sort((a, b) => b.w - a.w || b.s - a.s || b.t - a.t || a.name.localeCompare(b.name));
+  $('standingsCard').hidden = $('standingsLabel').hidden = !rows.length;
+  const st = $('standings'); st.innerHTML = '';
+  rows.forEach((r) => {
+    const d = document.createElement('div'); d.className = 'srow';
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = r.name;
+    const c = document.createElement('span'); c.className = 'c'; c.innerHTML = `<b>${r.w}</b> wins · ${r.s} 2nd · ${r.t} 3rd`;
+    d.append(n, c); st.appendChild(d);
+  });
+
+  // history
+  $('historyCard').hidden = $('historyLabel').hidden = !S.history.length;
+  const hi = $('history'); hi.innerHTML = '';
+  [...S.history].reverse().forEach((h) => {
+    const d = document.createElement('div'); d.className = 'hrow';
+    const dt = document.createElement('span'); dt.className = 'd';
+    dt.textContent = new Date(h.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    const w = document.createElement('span'); w.className = 'w';
+    w.textContent = [h.first && `1st ${h.first}`, h.second && `2nd ${h.second}`, h.third && `3rd ${h.third}`].filter(Boolean).join(' · ');
+    const x = document.createElement('button'); x.className = 'del'; x.textContent = '×'; x.setAttribute('aria-label', 'Delete this night');
+    x.addEventListener('click', () => {
+      if (!confirm('Delete this night from the record?')) return;
+      S.history = S.history.filter((e) => e.id !== h.id); save(); renderResults();
+    });
+    d.append(dt, w, x); hi.appendChild(d);
+  });
+}
+$('saveResult').addEventListener('click', () => {
+  const first = $('rFirst').value.trim(), second = $('rSecond').value.trim(), third = $('rThird').value.trim();
+  if (!first && !second && !third) { toast('Enter at least a winner'); return; }
+  S.history.push({ id: Date.now(), date: new Date().toISOString(), first, second, third });
+  save();
+  $('rFirst').value = $('rSecond').value = $('rThird').value = '';
+  renderResults(); toast('Result saved');
+});
+
+/* ---------- boot ---------- */
+render();
+setInterval(tick, 250);
+if (S.run.running) requestWake();
+document.addEventListener('pointerdown', unlockAudio, { once: true });
+tick();
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
 </body>
 </html>

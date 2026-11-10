@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0d0b09">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hillhaven">
+<title>Hillhaven Poker Club</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<main id="app">
+
+  <header class="top">
+    <button id="openResults" class="icon-btn" aria-label="Winners">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+    </button>
+    <h1 id="club">Hillhaven Poker Club</h1>
+    <button id="openSettings" class="icon-btn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+    </button>
+  </header>
+
+  <section class="stage">
+    <div class="dial" id="dial">
+      <svg viewBox="0 0 400 400" class="dial-svg" aria-hidden="true">
+        <defs>
+          <filter id="fGlow" x="-300%" y="-300%" width="700%" height="700%"><feGaussianBlur stdDeviation="7"/></filter>
+        </defs>
+        <circle cx="200" cy="200" r="170" class="track"/>
+        <circle id="ring" cx="200" cy="200" r="170" class="ring" transform="rotate(-90 200 200)"/>
+        <g id="fuse">
+          <circle r="13" class="glow ember-glow" filter="url(#fGlow)"/>
+          <circle r="5" class="spark"/>
+        </g>
+      </svg>
+      <div class="face">
+        <div class="lvl" id="lvlLabel">Level 1</div>
+        <button class="time" id="clock" aria-label="Time remaining, tap to adjust">15:00</button>
+        <div class="blinds" id="blinds">5 / 5</div>
+        <div class="next" id="next">Next 5 / 10</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="controls">
+    <button id="prevBtn" class="ctl" aria-label="Previous level">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+    </button>
+    <button id="minusBtn" class="ctl small">−1m</button>
+    <button id="playBtn" class="ctl play" aria-label="Start">
+      <svg id="playIcon" viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>
+    </button>
+    <button id="plusBtn" class="ctl small">+1m</button>
+    <button id="nextBtn" class="ctl" aria-label="Next level">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+    </button>
+  </section>
+
+  <div id="endBanner" class="end-banner" hidden>
+    <div class="eb-title">Time — that's the last hand</div>
+    <div class="eb-btns">
+      <button id="ebWinners" class="primary">Record winners</button>
+      <button id="ebNew">New night</button>
+    </div>
+  </div>
+
+  <section class="status">
+    <button class="pill" id="rebuyPill">
+      <span class="pl"><i class="dot"></i>Rebuys</span>
+      <span class="pv" id="rebuyVal">Open</span>
+      <span class="ps" id="rebuySub"></span>
+    </button>
+    <button class="pill" id="stopPill">
+      <span class="pl">Hard stop</span>
+      <span class="pv" id="stopVal">11:00 PM</span>
+      <span class="ps" id="stopSub"></span>
+    </button>
+  </section>
+
+  <section class="night" aria-label="Tonight's cigar">
+    <svg viewBox="0 -50 640 120" id="cigar" class="cigar" aria-hidden="true">
+      <defs>
+        <radialGradient id="gCigEmber">
+          <stop offset="0" stop-color="#ffd9a0"/><stop offset=".35" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff5a14" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect id="cBody" x="40" y="28" width="560" height="22" rx="11" class="leaf"/>
+      <g id="cBand"><rect x="500" y="28" width="12" height="22" class="band"/></g>
+      <g id="cFire">
+        <rect id="cChar" x="34" y="28" width="10" height="22" rx="4" class="char"/>
+        <rect id="cAsh" x="6" y="29" width="32" height="20" rx="8" class="ash"/>
+        <circle id="cEmber" cx="40" cy="39" r="22" fill="url(#gCigEmber)" class="cig-ember"/>
+        <g id="cSmoke" class="smoke">
+          <path class="wisp w1" d="M0 0 C -9 -12, 9 -22, 0 -36 S -7 -52, 3 -66"/>
+          <path class="wisp w2" d="M6 0 C 16 -10, -2 -22, 8 -34 S 16 -48, 6 -62"/>
+          <path class="wisp w3" d="M-6 0 C -16 -9, 2 -20, -8 -32 S -14 -46, -4 -58"/>
+        </g>
+      </g>
+    </svg>
+    <div class="night-cap"><span id="capL">Press ▶ to light up</span><span id="capR"></span></div>
+  </section>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<!-- Settings -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-head">
+    <h2>Settings</h2>
+    <button id="closeSettings" class="done-btn">Done</button>
+  </div>
+  <div class="sheet-body">
+
+    <div class="group">
+      <label class="row"><span>Club name</span><input type="text" id="sName" maxlength="40" autocomplete="off"></label>
+    </div>
+
+    <div class="gl">Blinds</div>
+    <div class="group">
+      <label class="row"><span>Level length</span><span class="unit"><input type="number" inputmode="numeric" id="sLevelMin" min="1" max="120"> min</span></label>
+      <details class="levels">
+        <summary class="row"><span>Edit levels</span><span id="lvlCount" class="hint"></span></summary>
+        <div class="table-wrap">
+          <table id="levelTable">
+            <thead><tr><th>#</th><th>Small</th><th>Big</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p class="hint pad">Type 1k or 1000, both work. The last level repeats until the hard stop.</p>
+          <div class="row-btns">
+            <button id="addLevel">Add level</button>
+            <button id="resetLevels">Club defaults</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="gl">Hard stop</div>
+    <div class="group">
+      <label class="row"><span>End the game at a set time</span><input type="checkbox" class="sw" id="sStopOn"></label>
+      <label class="row" id="stopTimeRow"><span>Stop at</span><input type="time" id="sStopTime"></label>
+    </div>
+
+    <div class="gl">Rebuys</div>
+    <div class="group">
+      <label class="row"><span>Open window, then locked</span><input type="checkbox" class="sw" id="sRebuyOn"></label>
+      <label class="row" id="rebuyMinRow"><span>Close after</span><span class="unit"><input type="number" inputmode="numeric" id="sRebuyMin" min="1" max="600"> min of play</span></label>
+    </div>
+
+    <div class="gl">Alerts</div>
+    <div class="group">
+      <label class="row"><span>Bell at level changes</span><input type="checkbox" class="sw" id="oSound"></label>
+      <label class="row"><span>Heads-up one minute before</span><input type="checkbox" class="sw" id="oWarn"></label>
+      <label class="row"><span>Announce blinds out loud</span><input type="checkbox" class="sw" id="oVoice"></label>
+      <label class="row"><span>Keep screen awake</span><input type="checkbox" class="sw" id="oWake"></label>
+      <button id="testSound" class="row link">Test the bell</button>
+    </div>
+
+    <div class="gl">Night</div>
+    <div class="group">
+      <button id="newNight" class="row link">Start a new night</button>
+      <button id="resetAll" class="row link danger">Reset all settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- Winners -->
+<div id="results" class="sheet" hidden>
+  <div class="sheet-head">
+    <h2>Winners</h2>
+    <button id="closeResults" class="done-btn">Done</button>
+  </div>
+  <div class="sheet-body">
+    <div class="gl" id="tonightLabel">Tonight</div>
+    <div class="group">
+      <label class="row place"><span class="medal">1st</span><input type="text" id="rFirst" list="names" placeholder="Name" autocomplete="off" autocapitalize="words"></label>
+      <label class="row place"><span class="medal">2nd</span><input type="text" id="rSecond" list="names" placeholder="Name" autocomplete="off" autocapitalize="words"></label>
+      <label class="row place"><span class="medal">3rd</span><input type="text" id="rThird" list="names" placeholder="Name" autocomplete="off" autocapitalize="words"></label>
+      <datalist id="names"></datalist>
+    </div>
+    <button id="saveResult" class="primary wide">Save tonight's result</button>
+
+    <div class="gl" id="standingsLabel" hidden>Standings</div>
+    <div class="group" id="standingsCard" hidden><div id="standings" class="standings"></div></div>
+
+    <div class="gl" id="historyLabel" hidden>Past nights</div>
+    <div class="group" id="historyCard" hidden><div id="history" class="history"></div></div>
+  </div>
+</div>
+
+<!-- Set time -->
+<div id="timeDlg" class="dlg-backdrop" hidden>
+  <div class="dlg">
+    <h3>Time left in this level</h3>
+    <div class="time-inputs">
+      <input type="number" inputmode="numeric" id="editMin" min="0" max="999" aria-label="Minutes">
+      <span>:</span>
+      <input type="number" inputmode="numeric" id="editSec" min="0" max="59" aria-label="Seconds">
+    </div>
+    <div class="quick">
+      <button data-adj="-60">−1m</button><button data-adj="-10">−10s</button>
+      <button data-adj="10">+10s</button><button data-adj="60">+1m</button>
+    </div>
+    <button id="resetLevelTime" class="wide">Reset to full level</button>
+    <div class="dlg-btns"><button id="timeCancel">Cancel</button><button id="timeOk" class="primary">Set</button></div>
+  </div>
+</div>
+
+<!-- Rebuy window -->
+<div id="rebuyDlg" class="dlg-backdrop" hidden>
+  <div class="dlg">
+    <h3>Rebuy window</h3>
+    <p id="rebuyDlgText" class="dlg-text"></p>
+    <div class="quick two">
+      <button data-rb="-15">−15 min</button><button data-rb="15">+15 min</button>
+    </div>
+    <button id="rbCloseNow" class="wide">Close rebuys now</button>
+    <button id="rbReset" class="wide">Back to default</button>
+    <div class="dlg-btns"><button id="rbDone" class="primary">Done</button></div>
+  </div>
+</div>
+
+<!-- Hard stop -->
+<div id="stopDlg" class="dlg-backdrop" hidden>
+  <div class="dlg">
+    <h3>Hard stop</h3>
+    <div class="time-inputs"><input type="time" id="stopTimeIn" class="time-field"></div>
+    <div class="dlg-btns"><button id="stopCancel">Cancel</button><button id="stopOk" class="primary">Set</button></div>
+  </div>
+</div>
+
+<script>
+/*JS*/
+</script>
+</body>
+</html>

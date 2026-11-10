@@ -1,6 +1,6 @@
 // Offline cache for the app shell. Bump VERSION when you change any file.
-const VERSION = 'poker-timer-v1';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'manifest.json', 'icon.svg', 'icon-180.png', 'icon-512.png'];
+const VERSION = 'hillhaven-v1';
+const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-180.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
